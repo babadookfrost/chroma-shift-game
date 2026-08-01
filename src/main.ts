@@ -7,7 +7,7 @@ import { ChromaPipeline } from './shaders/ChromaPipeline';
 
 // Standard 9:16 portrait resolution optimized for modern iPhone viewports
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO, // Enable high performance WebGL with graceful Canvas fallback
+  type: Phaser.CANVAS, // Force Phaser.CANVAS instead of Phaser.AUTO as temporary test
   width: 800,
   height: 1200,
   parent: 'game-container',
@@ -34,8 +34,22 @@ const config: Phaser.Types.Core.GameConfig = {
 // Initialize the Phaser game instance
 const game = new Phaser.Game(config);
 
-// WebGL Fallback detection
+// WebGL Fallback detection with 3-second timeout fallback
+let rendererDetected = false;
+
+const initTimeout = setTimeout(() => {
+  if (!rendererDetected) {
+    const errorMsg = 'Phaser Renderer Initialization Timeout:\nRenderer not detected in 3 seconds. The game loop is not running. Please verify if WebGL/Canvas is supported, or if there is a CORS or security issue blocking canvas creation.';
+    console.error('[System] ' + errorMsg);
+    if (typeof (window as any).showErrorOverlay === 'function') {
+      (window as any).showErrorOverlay(errorMsg);
+    }
+  }
+}, 3000);
+
 game.events.once('ready', () => {
+  rendererDetected = true;
+  clearTimeout(initTimeout);
   const isWebGL = game.renderer.type === Phaser.WEBGL;
   if (typeof (window as any).chromaDebug === 'object') {
     (window as any).chromaDebug.renderer = isWebGL ? 'WebGL' : 'Canvas';

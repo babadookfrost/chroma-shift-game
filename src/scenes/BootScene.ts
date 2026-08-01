@@ -11,11 +11,14 @@ export class BootScene extends Phaser.Scene {
 
   constructor() {
     super(BootScene.KEY);
+    console.log('[BootScene] Constructor initiated');
   }
 
   preload(): void {
+    console.log('[BootScene] preload() started');
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+    console.log(`[BootScene] Viewport dimensions configured: ${width}x${height}`);
 
     // Beautiful typography for Title
     const titleText = this.add.text(width / 2, height / 2 - 80, 'CHROMA SHIFT', {
@@ -45,12 +48,14 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.load.on('progress', (value: number) => {
+      console.log(`[BootScene] Load progress: ${Math.round(value * 100)}%`);
       progressBar.clear();
       progressBar.fillStyle(0x3c14ff, 1);
       progressBar.fillRect(width / 2 - 150, height / 2 + 55, 300 * value, 10);
     });
 
     this.load.on('complete', () => {
+      console.log('[BootScene] Load completed successfully');
       progressBar.destroy();
       progressBox.destroy();
       loadingText.setText('TAP TO SHIFT SPECTRUM');
@@ -68,20 +73,25 @@ export class BootScene extends Phaser.Scene {
 
       // Tap-to-start unlock screen
       this.input.once('pointerdown', async () => {
+        console.log('[BootScene] Pointer down detected, initializing audio and save systems...');
         // Unlock sound on mobile Safari / Chrome
         SoundEngine.init();
         await SoundEngine.resume();
         SoundEngine.playTap();
 
         // Load progress before entering game
+        console.log('[BootScene] Loading player progress...');
         await SaveSystem.loadProgress();
 
+        console.log('[BootScene] Starting GameScene');
         this.scene.start('GameScene');
       });
     });
 
     try {
+      console.log('[BootScene] Generating procedural textures...');
       this.createProceduralTextures();
+      console.log('[BootScene] All procedural textures successfully generated');
     } catch (err: any) {
       const errorMsg = `Procedural Asset Generation Failure: ${err?.message || err}\nMake sure Canvas/WebGL is fully supported on your browser.`;
       console.error('[BootScene] ' + errorMsg, err);
@@ -97,6 +107,7 @@ export class BootScene extends Phaser.Scene {
    */
   private createProceduralTextures(): void {
     // 1. Mirror Element Graphic (Silver-neon glowing bar)
+    console.log('[BootScene] Generating mirror_texture...');
     const mirrorGfx = this.make.graphics();
     mirrorGfx.fillStyle(0x1a1a40, 1);
     mirrorGfx.fillRect(0, 0, 60, 16);
@@ -107,8 +118,10 @@ export class BootScene extends Phaser.Scene {
     if (!mirrorGfx.generateTexture('mirror_texture', 60, 16)) {
       throw new Error('Failed to generate mirror_texture');
     }
+    console.log('[BootScene] mirror_texture generated');
 
     // 2. Prism Element Graphic (Translucent triangular prism with colorful spectrum cores)
+    console.log('[BootScene] Generating prism_texture...');
     const prismGfx = this.make.graphics();
     prismGfx.lineStyle(2, 0xff00ff, 1);
     prismGfx.strokeTriangle(25, 5, 5, 40, 45, 40);
@@ -117,8 +130,10 @@ export class BootScene extends Phaser.Scene {
     if (!prismGfx.generateTexture('prism_texture', 50, 45)) {
       throw new Error('Failed to generate prism_texture');
     }
+    console.log('[BootScene] prism_texture generated');
 
     // 3. Emitter Graphic (Chunky metal cylinder with colored lens)
+    console.log('[BootScene] Generating emitter_texture...');
     const emitterGfx = this.make.graphics();
     emitterGfx.fillStyle(0x222233, 1);
     emitterGfx.fillRect(0, 10, 40, 20);
@@ -129,8 +144,10 @@ export class BootScene extends Phaser.Scene {
     if (!emitterGfx.generateTexture('emitter_texture', 40, 40)) {
       throw new Error('Failed to generate emitter_texture');
     }
+    console.log('[BootScene] emitter_texture generated');
 
     // 4. Target Crystal Graphic (A beautiful neon core gemstone)
+    console.log('[BootScene] Generating crystal_texture...');
     const crystalGfx = this.make.graphics();
     crystalGfx.lineStyle(2, 0xffff00, 1);
     crystalGfx.strokeTriangle(20, 2, 5, 20, 35, 20);
@@ -141,5 +158,6 @@ export class BootScene extends Phaser.Scene {
     if (!crystalGfx.generateTexture('crystal_texture', 40, 40)) {
       throw new Error('Failed to generate crystal_texture');
     }
+    console.log('[BootScene] crystal_texture generated');
   }
 }

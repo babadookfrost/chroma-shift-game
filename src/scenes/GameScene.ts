@@ -61,9 +61,13 @@ export class GameScene extends Phaser.Scene {
     console.log('[GameScene] InputController successfully registered: ', gestureController);
 
     // Set up active post-processing effects pipeline
-    const renderer = this.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-    if (renderer.pipelines && renderer.pipelines.has(ChromaPipeline.KEY)) {
-      this.cameras.main.setPostPipeline(ChromaPipeline.KEY);
+    if (this.game.renderer.type === Phaser.WEBGL) {
+      const renderer = this.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+      if (renderer && renderer.pipelines && typeof renderer.pipelines.has === 'function' && renderer.pipelines.has(ChromaPipeline.KEY)) {
+        this.cameras.main.setPostPipeline(ChromaPipeline.KEY);
+      }
+    } else {
+      console.log('[GameScene] Post-processing pipeline skipped (Renderer is Canvas)');
     }
 
     // UI Overlay Header
