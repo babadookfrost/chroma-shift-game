@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0d21">
+  <title>Chroma Shift</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/pwa/icon-192.png">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #05050f;
+      color: #e0e0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .safe-inset-top { padding-top: env(safe-area-inset-top, 0px); }
+    .safe-inset-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .safe-inset-left { padding-left: env(safe-area-inset-left, 0px); }
+    .safe-inset-right { padding-right: env(safe-area-inset-right, 0px); }
+
+    #ath-prompt {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      width: 90%;
+      max-width: 400px;
+      background: rgba(13, 13, 33, 0.95);
+      border: 1px solid #3c14ff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(60, 20, 255, 0.3), 0 0 15px rgba(60, 20, 255, 0.2);
+      padding: 16px 20px;
+      z-index: 100;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+    }
+    #ath-prompt.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .ath-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ath-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: 1px solid #3c14ff;
+      background: #05050f;
+    }
+    .ath-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #00ffff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+    .ath-desc {
+      font-size: 0.85rem;
+      color: #b0b0d0;
+      line-height: 1.3;
+    }
+    .ath-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .ath-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .ath-btn-dismiss {
+      background: transparent;
+      color: #8080a0;
+    }
+    .ath-btn-install {
+      background: linear-gradient(135deg, #3c14ff, #ff00ff);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+    }
+
+    #update-toast {
+      position: fixed;
+      top: env(safe-area-inset-top, 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-150%);
+      width: 90%;
+      max-width: 320px;
+      background: rgba(255, 0, 255, 0.15);
+      border: 1px solid #ff00ff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 101;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    #update-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast-text {
+      font-size: 0.85rem;
+      color: #ffbfff;
+      font-weight: 500;
+    }
+    .toast-btn {
+      background: #ff00ff;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #ios-safari-instructions {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #b0b0d0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+    }
+    #ios-safari-instructions span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ios-icon {
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <div id="ath-prompt">
+    <div class="ath-header">
+      <img class="ath-icon" src="./assets/pwa/icon-192.png" alt="Chroma Shift Logo">
+      <div>
+        <div class="ath-title">Chroma Shift</div>
+        <div class="ath-desc">Install Chroma Shift for fullscreen gaming and offline play.</div>
+      </div>
+    </div>
+    <div id="ios-safari-instructions">
+      <span>Tap the share button <strong class="ios-icon">⎋</strong> at the bottom of Safari.</span>
+      <span>Select <strong>Add to Home Screen</strong> from the menu list.</span>
+    </div>
+    <div class="ath-buttons">
+      <button class="ath-btn ath-btn-dismiss" id="ath-dismiss">Later</button>
+      <button class="ath-btn ath-btn-install" id="ath-install">Install</button>
+    </div>
+  </div>
+
+  <div id="update-toast">
+    <span class="toast-text">New Version Available!</span>
+    <button class="toast-btn" id="update-refresh">Update</button>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+  <script>
+    let deferredPrompt;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((registration) => {
+          console.log('[Service Worker] Registered with scope: ', registration.scope);
+
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                const toast = document.getElementById('update-toast');
+                toast.classList.add('show');
+                document.getElementById('update-refresh').addEventListener('click', () => {
+                  newWorker.postMessage({ action: 'skipWaiting' });
+                  window.location.reload();
+                });
+              }
+            });
+          });
+        }).catch((err) => {
+          console.error('[Service Worker] Registration failed: ', err);
+        });
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      if (!sessionStorage.getItem('ath-dismissed')) {
+        setTimeout(() => {
+          const prompt = document.getElementById('ath-prompt');
+          if (prompt) prompt.classList.add('show');
+        }, 3000);
+      }
+    });
+
+    document.getElementById('ath-dismiss').addEventListener('click', () => {
+      document.getElementById('ath-prompt').classList.remove('show');
+      sessionStorage.setItem('ath-dismissed', 'true');
+    });
+
+    document.getElementById('ath-install').addEventListener('click', () => {
+      if (isIOS) {
+        document.getElementById('ios-safari-instructions').style.display = 'flex';
+        document.getElementById('ath-install').style.display = 'none';
+      } else if (deferredPrompt) {
+        document.getElementById('ath-prompt').classList.remove('show');
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          deferredPrompt = null;
+        });
+      } else {
+        alert('To install, use your browser\'s menu and select "Add to Home Screen".');
+      }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      document.getElementById('ath-prompt').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

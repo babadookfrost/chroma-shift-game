@@ -1,0 +1,33 @@
+{
+  "name": "Chroma Shift",
+  "short_name": "Chroma Shift",
+  "description": "Premium AAA mobile-first light puzzle game. Direct laser beams, split colors through prisms, and activate glowing targets with mesmerizing neon visuals.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a16",
+  "theme_color": "#0d0d21",
+  "icons": [
+    {
+      "src": "./assets/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./assets/pwa/screenshot-portrait.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Chroma Shift Gameplay"
+    }
+  ]
+}
