@@ -80,7 +80,15 @@ export class BootScene extends Phaser.Scene {
       });
     });
 
-    this.createProceduralTextures();
+    try {
+      this.createProceduralTextures();
+    } catch (err: any) {
+      const errorMsg = `Procedural Asset Generation Failure: ${err?.message || err}\nMake sure Canvas/WebGL is fully supported on your browser.`;
+      console.error('[BootScene] ' + errorMsg, err);
+      if (typeof (window as any).showErrorOverlay === 'function') {
+        (window as any).showErrorOverlay(errorMsg);
+      }
+    }
   }
 
   /**
@@ -96,7 +104,9 @@ export class BootScene extends Phaser.Scene {
     mirrorGfx.strokeRect(0, 0, 60, 16);
     mirrorGfx.fillStyle(0xffffff, 0.8);
     mirrorGfx.fillRect(4, 4, 52, 8);
-    mirrorGfx.generateTexture('mirror_texture', 60, 16);
+    if (!mirrorGfx.generateTexture('mirror_texture', 60, 16)) {
+      throw new Error('Failed to generate mirror_texture');
+    }
 
     // 2. Prism Element Graphic (Translucent triangular prism with colorful spectrum cores)
     const prismGfx = this.make.graphics();
@@ -104,7 +114,9 @@ export class BootScene extends Phaser.Scene {
     prismGfx.strokeTriangle(25, 5, 5, 40, 45, 40);
     prismGfx.fillStyle(0xffffff, 0.4);
     prismGfx.fillTriangle(25, 12, 10, 37, 40, 37);
-    prismGfx.generateTexture('prism_texture', 50, 45);
+    if (!prismGfx.generateTexture('prism_texture', 50, 45)) {
+      throw new Error('Failed to generate prism_texture');
+    }
 
     // 3. Emitter Graphic (Chunky metal cylinder with colored lens)
     const emitterGfx = this.make.graphics();
@@ -114,7 +126,9 @@ export class BootScene extends Phaser.Scene {
     emitterGfx.strokeRect(0, 10, 40, 20);
     emitterGfx.fillStyle(0xffffff, 1);
     emitterGfx.fillRect(36, 12, 4, 16);
-    emitterGfx.generateTexture('emitter_texture', 40, 40);
+    if (!emitterGfx.generateTexture('emitter_texture', 40, 40)) {
+      throw new Error('Failed to generate emitter_texture');
+    }
 
     // 4. Target Crystal Graphic (A beautiful neon core gemstone)
     const crystalGfx = this.make.graphics();
@@ -124,6 +138,8 @@ export class BootScene extends Phaser.Scene {
     crystalGfx.fillStyle(0xffff00, 0.5);
     crystalGfx.fillTriangle(20, 8, 10, 20, 30, 20);
     crystalGfx.fillTriangle(20, 32, 10, 20, 30, 20);
-    crystalGfx.generateTexture('crystal_texture', 40, 40);
+    if (!crystalGfx.generateTexture('crystal_texture', 40, 40)) {
+      throw new Error('Failed to generate crystal_texture');
+    }
   }
 }
