@@ -74,6 +74,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(): void {
+    if (typeof (window as any).chromaDebug === 'object') {
+      (window as any).chromaDebug.fps = this.game.loop.actualFps;
+    }
+
     if (this.isLevelComplete) return;
 
     // 1. Sync physical positions from Phaser sprites into the mathematical OpticsEngine
@@ -89,6 +93,10 @@ export class GameScene extends Phaser.Scene {
 
     // 2. Compute path-tracing in real-time
     const trace = this.opticsEngine.traceBeams();
+
+    if (typeof (window as any).chromaDebug === 'object') {
+      (window as any).chromaDebug.activeBeams = trace.segments.length;
+    }
 
     // 3. Clear and redraw active glowing laser beams
     this.drawBeams(trace.segments);

@@ -7,7 +7,7 @@ import { ChromaPipeline } from './shaders/ChromaPipeline';
 
 // Standard 9:16 portrait resolution optimized for modern iPhone viewports
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.WEBGL, // Force high performance WebGL
+  type: Phaser.AUTO, // Enable high performance WebGL with graceful Canvas fallback
   width: 800,
   height: 1200,
   parent: 'game-container',
@@ -33,6 +33,21 @@ const config: Phaser.Types.Core.GameConfig = {
 
 // Initialize the Phaser game instance
 const game = new Phaser.Game(config);
+
+// WebGL Fallback detection
+game.events.once('ready', () => {
+  const isWebGL = game.renderer.type === Phaser.WEBGL;
+  if (typeof (window as any).chromaDebug === 'object') {
+    (window as any).chromaDebug.renderer = isWebGL ? 'WebGL' : 'Canvas';
+  }
+  if (!isWebGL) {
+    console.warn('[Phaser] WebGL not available. Falling back to Canvas Rendering Mode.');
+    const banner = document.getElementById('compatibility-banner');
+    if (banner) {
+      banner.style.display = 'block';
+    }
+  }
+});
 
 // Resize handling logic
 window.addEventListener('resize', () => {

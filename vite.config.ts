@@ -16,5 +16,8 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
+  },
+  test: {
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/**']
   }
-});
+} as any);
