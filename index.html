@@ -406,6 +406,12 @@
       showErrorOverlay("Unhandled Promise Rejection:\n" + msg);
     });
 
+    window.addEventListener('webglcontextcreationerror', function(event) {
+      const msg = event.statusMessage || "Your browser or system failed to allocate WebGL context resources.";
+      console.error("[WebGL] Context creation error detected: " + msg);
+      showErrorOverlay("WebGL Context Creation Failure:\n" + msg);
+    });
+
     document.getElementById('error-retry-btn').addEventListener('click', function() {
       window.location.reload();
     });

@@ -14,6 +14,10 @@ export class BootScene extends Phaser.Scene {
     console.log('[BootScene] Constructor initiated');
   }
 
+  init(): void {
+    console.log('[BootScene] init() lifecycle method called');
+  }
+
   preload(): void {
     console.log('[BootScene] preload() started');
     const width = this.cameras.main.width;
@@ -99,6 +103,10 @@ export class BootScene extends Phaser.Scene {
         (window as any).showErrorOverlay(errorMsg);
       }
     }
+  }
+
+  create(): void {
+    console.log('[BootScene] create() lifecycle method called - BootScene loaded completely');
   }
 
   /**
