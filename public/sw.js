@@ -12,8 +12,23 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Pre-caching offline assets');
-      return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting())
+      // Use Promise.allSettled to guarantee Service Worker installs successfully
+      // even if individual optional assets fail to fetch or are missing in dev.
+      return Promise.allSettled(
+        ASSETS.map((asset) => {
+          return cache.add(asset)
+            .then(() => {
+              console.log(`[Service Worker] Cached asset successfully: ${asset}`);
+            })
+            .catch((err) => {
+              console.warn(`[Service Worker] Optional asset pre-cache failed: ${asset}`, err);
+            });
+        })
+      );
+    }).then(() => {
+      console.log('[Service Worker] Installation complete, skipping waiting...');
+      return self.skipWaiting();
+    })
   );
 });
 
