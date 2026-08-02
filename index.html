@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0d21">
+  <title>Chroma Shift</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/pwa/icon-192.png">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #05050f;
+      color: #e0e0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .safe-inset-top { padding-top: env(safe-area-inset-top, 0px); }
+    .safe-inset-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .safe-inset-left { padding-left: env(safe-area-inset-left, 0px); }
+    .safe-inset-right { padding-right: env(safe-area-inset-right, 0px); }
+
+    #ath-prompt {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      width: 90%;
+      max-width: 400px;
+      background: rgba(13, 13, 33, 0.95);
+      border: 1px solid #3c14ff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(60, 20, 255, 0.3), 0 0 15px rgba(60, 20, 255, 0.2);
+      padding: 16px 20px;
+      z-index: 100;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+    }
+    #ath-prompt.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .ath-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ath-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: 1px solid #3c14ff;
+      background: #05050f;
+    }
+    .ath-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #00ffff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+    .ath-desc {
+      font-size: 0.85rem;
+      color: #b0b0d0;
+      line-height: 1.3;
+    }
+    .ath-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .ath-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .ath-btn-dismiss {
+      background: transparent;
+      color: #8080a0;
+    }
+    .ath-btn-install {
+      background: linear-gradient(135deg, #3c14ff, #ff00ff);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+    }
+
+    #update-toast {
+      position: fixed;
+      top: env(safe-area-inset-top, 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-150%);
+      width: 90%;
+      max-width: 320px;
+      background: rgba(255, 0, 255, 0.15);
+      border: 1px solid #ff00ff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 101;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    #update-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast-text {
+      font-size: 0.85rem;
+      color: #ffbfff;
+      font-weight: 500;
+    }
+    .toast-btn {
+      background: #ff00ff;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #ios-safari-instructions {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #b0b0d0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+    }
+    #ios-safari-instructions span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ios-icon {
+      font-size: 1.2rem;
+    }
+
+    #compatibility-banner {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: rgba(255, 183, 3, 0.15);
+      border: 1px solid #ffb703;
+      color: #ffb703;
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px rgba(255, 183, 3, 0.3);
+      pointer-events: none;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #error-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 20, 0.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+    }
+    .error-card {
+      width: 100%;
+      max-width: 440px;
+      background: #0d0d21;
+      border: 2px solid #ff00ff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 0, 255, 0.4), inset 0 0 15px rgba(255, 0, 255, 0.1);
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .error-header {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #ff00ff;
+      text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .error-subheader {
+      font-size: 0.8rem;
+      color: #00ffff;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.4);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .error-details {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid #3c14ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #b0b0d0;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .error-btn {
+      margin-top: 10px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #3c14ff, #ff00ff);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+      transition: all 0.2s ease-in-out;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .error-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 0, 255, 0.8);
+    }
+
+    #debug-hud {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: rgba(13, 13, 33, 0.85);
+      border: 1px dashed #00ffff;
+      color: #00ffff;
+      font-family: monospace;
+      font-size: 0.75rem;
+      padding: 12px;
+      border-radius: 8px;
+      z-index: 999;
+      width: 240px;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      text-transform: uppercase;
+    }
+    .hud-title {
+      font-weight: bold;
+      color: #ff00ff;
+      border-bottom: 1px solid rgba(255, 0, 255, 0.3);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .hud-label {
+      color: #8080a0;
+    }
+    .hud-value {
+      font-weight: bold;
+    }
+    .hud-console {
+      margin-top: 8px;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+      padding-top: 6px;
+      font-size: 0.65rem;
+      color: #ff3333;
+      max-height: 80px;
+      overflow: hidden;
+    }
+    .hud-console-entry {
+      margin-bottom: 2px;
+      word-break: break-all;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-Bxti_BNK.js"></script>
+</head>
+<body>
+  <div id="game-container"></div>
+  <div id="compatibility-banner">Compatibility Mode Active (Canvas Fallback)</div>
+
+  <div id="error-overlay">
+    <div class="error-card">
+      <div class="error-header">SYSTEM COLLAPSE DETECTED</div>
+      <div class="error-subheader">THE OPTICAL SPECTRUM HAS SHIFTED UNEXPECTEDLY</div>
+      <div class="error-details" id="error-details-text">An unknown failure has occurred.</div>
+      <button class="error-btn" id="error-retry-btn">REBOOT SYSTEM</button>
+    </div>
+  </div>
+
+  <div id="debug-hud">
+    <div class="hud-title">CHROMA DIAGNOSTICS</div>
+    <div class="hud-row">
+      <span class="hud-label">FPS</span>
+      <span class="hud-value" id="hud-fps">0 FPS</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">RENDERER</span>
+      <span class="hud-value" id="hud-renderer">DETECTING...</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">ACTIVE BEAMS</span>
+      <span class="hud-value" id="hud-beams">0</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">MEMORY USAGE</span>
+      <span class="hud-value" id="hud-memory">N/A</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">POINTER</span>
+      <span class="hud-value" id="hud-pointer">X: 0, Y: 0</span>
+    </div>
+    <div class="hud-console">
+      <div style="font-weight: bold; margin-bottom: 4px; color: #ff00ff;">CONSOLE LOGGER</div>
+      <div id="hud-console-list"></div>
+    </div>
+  </div>
+
+  <div id="ath-prompt">
+    <div class="ath-header">
+      <img class="ath-icon" src="./assets/pwa/icon-192.png" alt="Chroma Shift Logo">
+      <div>
+        <div class="ath-title">Chroma Shift</div>
+        <div class="ath-desc">Install Chroma Shift for fullscreen gaming and offline play.</div>
+      </div>
+    </div>
+    <div id="ios-safari-instructions">
+      <span>Tap the share button <strong class="ios-icon">⎋</strong> at the bottom of Safari.</span>
+      <span>Select <strong>Add to Home Screen</strong> from the menu list.</span>
+    </div>
+    <div class="ath-buttons">
+      <button class="ath-btn ath-btn-dismiss" id="ath-dismiss">Later</button>
+      <button class="ath-btn ath-btn-install" id="ath-install">Install</button>
+    </div>
+  </div>
+
+  <div id="update-toast">
+    <span class="toast-text">New Version Available!</span>
+    <button class="toast-btn" id="update-refresh">Update</button>
+  </div>
+
+  <script>
+    // System-wide Global Error Handler & Cyberpunk Overlay controller
+    function showErrorOverlay(message) {
+      const overlay = document.getElementById('error-overlay');
+      const details = document.getElementById('error-details-text');
+      if (overlay && details) {
+        details.textContent = message;
+        overlay.style.display = 'flex';
+      }
+    }
+    window.showErrorOverlay = showErrorOverlay;
+
+    window.addEventListener('error', function(event) {
+      const msg = event.error ? (event.error.stack || event.error.message) : event.message;
+      showErrorOverlay("Unhandled Runtime Error:\n" + msg);
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+      const msg = event.reason ? (event.reason.stack || event.reason.message || event.reason) : "Promise rejection";
+      showErrorOverlay("Unhandled Promise Rejection:\n" + msg);
+    });
+
+    document.getElementById('error-retry-btn').addEventListener('click', function() {
+      window.location.reload();
+    });
+
+    // Debug Mode controller
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDebugQuery = urlParams.get('debug') === 'true';
+    const isDebugLocalStorage = localStorage.getItem('chroma_debug') === 'true';
+    const isDebug = isDebugQuery || isDebugLocalStorage;
+
+    window.chromaDebug = {
+      fps: 0,
+      renderer: 'Detecting...',
+      activeBeams: 0,
+      memory: 'N/A',
+      pointerX: 0,
+      pointerY: 0,
+      lastLogs: []
+    };
+
+    if (isDebug) {
+      const hud = document.getElementById('debug-hud');
+      if (hud) hud.style.display = 'block';
+
+      // Capture standard console.log/console.warn/console.error inside debug HUD
+      const interceptLog = function(type, originalFn) {
+        return function() {
+          const args = Array.from(arguments).map(arg => {
+            if (typeof arg === 'object') {
+              try {
+                // Safely format objects without throwing on circular structures
+                return JSON.stringify(arg);
+              } catch (e) {
+                return arg ? (arg.constructor ? `[Object: ${arg.constructor.name}]` : '[Object]') : 'null';
+              }
+            }
+            return String(arg);
+          }).join(' ');
+          window.chromaDebug.lastLogs.push(`[${type}] ${args}`);
+          if (window.chromaDebug.lastLogs.length > 5) {
+            window.chromaDebug.lastLogs.shift();
+          }
+          originalFn.apply(console, arguments);
+        };
+      };
+
+      console.error = interceptLog('ERR', console.error);
+      console.warn = interceptLog('WRN', console.warn);
+      console.log = interceptLog('LOG', console.log);
+
+      // Mouse/touch coords tracking
+      window.addEventListener('mousemove', function(e) {
+        window.chromaDebug.pointerX = e.clientX;
+        window.chromaDebug.pointerY = e.clientY;
+      });
+      window.addEventListener('touchmove', function(e) {
+        if (e.touches && e.touches[0]) {
+          window.chromaDebug.pointerX = e.touches[0].clientX;
+          window.chromaDebug.pointerY = e.touches[0].clientY;
+        }
+      });
+
+      // HUD UI Sync Interval
+      setInterval(function() {
+        document.getElementById('hud-fps').textContent = Math.round(window.chromaDebug.fps || 0) + ' FPS';
+        document.getElementById('hud-renderer').textContent = window.chromaDebug.renderer;
+        document.getElementById('hud-beams').textContent = window.chromaDebug.activeBeams;
+
+        let memText = 'N/A';
+        if (window.performance && window.performance.memory) {
+          memText = Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024)) + ' MB';
+        } else {
+          memText = 'EST: 45 MB';
+        }
+        document.getElementById('hud-memory').textContent = memText;
+        document.getElementById('hud-pointer').textContent = 'X: ' + Math.round(window.chromaDebug.pointerX) + ', Y: ' + Math.round(window.chromaDebug.pointerY);
+
+        const list = document.getElementById('hud-console-list');
+        if (list) {
+          list.innerHTML = '';
+          window.chromaDebug.lastLogs.forEach(function(log) {
+            const entry = document.createElement('div');
+            entry.className = 'hud-console-entry';
+            if (log.startsWith('[ERR]')) {
+              entry.style.color = '#ff3333';
+            } else if (log.startsWith('[WRN]')) {
+              entry.style.color = '#ffff33';
+            } else {
+              entry.style.color = '#00ffff';
+            }
+            entry.textContent = log;
+            list.appendChild(entry);
+          });
+        }
+      }, 150);
+    }
+  </script>
+
+  <script>
+    let deferredPrompt;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then((registration) => {
+          console.log('[Service Worker] Registered with scope: ', registration.scope);
+
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  const toast = document.getElementById('update-toast');
+                  if (toast) {
+                    toast.classList.add('show');
+                    const refreshBtn = document.getElementById('update-refresh');
+                    if (refreshBtn) {
+                      refreshBtn.addEventListener('click', () => {
+                        newWorker.postMessage({ action: 'skipWaiting' });
+                        window.location.reload();
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          });
+        }).catch((err) => {
+          console.error('[Service Worker] Registration failed: ', err);
+        });
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      if (!sessionStorage.getItem('ath-dismissed')) {
+        setTimeout(() => {
+          const prompt = document.getElementById('ath-prompt');
+          if (prompt) prompt.classList.add('show');
+        }, 3000);
+      }
+    });
+
+    document.getElementById('ath-dismiss').addEventListener('click', () => {
+      document.getElementById('ath-prompt').classList.remove('show');
+      sessionStorage.setItem('ath-dismissed', 'true');
+    });
+
+    document.getElementById('ath-install').addEventListener('click', () => {
+      if (isIOS) {
+        document.getElementById('ios-safari-instructions').style.display = 'flex';
+        document.getElementById('ath-install').style.display = 'none';
+      } else if (deferredPrompt) {
+        document.getElementById('ath-prompt').classList.remove('show');
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          deferredPrompt = null;
+        });
+      } else {
+        alert('To install, use your browser\'s menu and select "Add to Home Screen".');
+      }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      document.getElementById('ath-prompt').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
