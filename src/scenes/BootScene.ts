@@ -115,10 +115,12 @@ export class BootScene extends Phaser.Scene {
     mirrorGfx.strokeRect(0, 0, 60, 16);
     mirrorGfx.fillStyle(0xffffff, 0.8);
     mirrorGfx.fillRect(4, 4, 52, 8);
-    if (!mirrorGfx.generateTexture('mirror_texture', 60, 16)) {
-      throw new Error('Failed to generate mirror_texture');
+    try {
+      mirrorGfx.generateTexture('mirror_texture', 60, 16);
+      console.log('[BootScene] mirror_texture generated');
+    } catch (e) {
+      console.warn('[BootScene] Failed to generate mirror_texture', e);
     }
-    console.log('[BootScene] mirror_texture generated');
 
     // 2. Prism Element Graphic (Translucent triangular prism with colorful spectrum cores)
     console.log('[BootScene] Generating prism_texture...');
@@ -127,10 +129,12 @@ export class BootScene extends Phaser.Scene {
     prismGfx.strokeTriangle(25, 5, 5, 40, 45, 40);
     prismGfx.fillStyle(0xffffff, 0.4);
     prismGfx.fillTriangle(25, 12, 10, 37, 40, 37);
-    if (!prismGfx.generateTexture('prism_texture', 50, 45)) {
-      throw new Error('Failed to generate prism_texture');
+    try {
+      prismGfx.generateTexture('prism_texture', 50, 45);
+      console.log('[BootScene] prism_texture generated');
+    } catch (e) {
+      console.warn('[BootScene] Failed to generate prism_texture', e);
     }
-    console.log('[BootScene] prism_texture generated');
 
     // 3. Emitter Graphic (Chunky metal cylinder with colored lens)
     console.log('[BootScene] Generating emitter_texture...');
@@ -141,10 +145,12 @@ export class BootScene extends Phaser.Scene {
     emitterGfx.strokeRect(0, 10, 40, 20);
     emitterGfx.fillStyle(0xffffff, 1);
     emitterGfx.fillRect(36, 12, 4, 16);
-    if (!emitterGfx.generateTexture('emitter_texture', 40, 40)) {
-      throw new Error('Failed to generate emitter_texture');
+    try {
+      emitterGfx.generateTexture('emitter_texture', 40, 40);
+      console.log('[BootScene] emitter_texture generated');
+    } catch (e) {
+      console.warn('[BootScene] Failed to generate emitter_texture', e);
     }
-    console.log('[BootScene] emitter_texture generated');
 
     // 4. Target Crystal Graphic (A beautiful neon core gemstone)
     console.log('[BootScene] Generating crystal_texture...');
@@ -155,9 +161,11 @@ export class BootScene extends Phaser.Scene {
     crystalGfx.fillStyle(0xffff00, 0.5);
     crystalGfx.fillTriangle(20, 8, 10, 20, 30, 20);
     crystalGfx.fillTriangle(20, 32, 10, 20, 30, 20);
-    if (!crystalGfx.generateTexture('crystal_texture', 40, 40)) {
-      throw new Error('Failed to generate crystal_texture');
+    try {
+      crystalGfx.generateTexture('crystal_texture', 40, 40);
+      console.log('[BootScene] crystal_texture generated');
+    } catch (e) {
+      console.warn('[BootScene] Failed to generate crystal_texture', e);
     }
-    console.log('[BootScene] crystal_texture generated');
   }
 }

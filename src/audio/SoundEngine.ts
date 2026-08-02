@@ -27,16 +27,23 @@ export class SoundEngine {
 
     try {
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioCtxClass();
+      if (AudioCtxClass) {
+        this.ctx = new AudioCtxClass();
 
-      this.masterVolumeNode = this.ctx.createGain();
-      this.masterVolumeNode.connect(this.ctx.destination);
-      this.updateVolume();
+        if (this.ctx) {
+          this.masterVolumeNode = this.ctx.createGain();
+          this.masterVolumeNode.connect(this.ctx.destination);
+          this.updateVolume();
 
-      // Start the continuous ambient space drone
-      this.startAmbientDrone();
+          // Start the continuous ambient space drone
+          this.startAmbientDrone();
+        }
+      } else {
+        console.warn('[SoundEngine] AudioContext not found in window.');
+      }
     } catch (e) {
-      console.warn('[SoundEngine] Web Audio API not supported on this device: ', e);
+      console.warn('[SoundEngine] Web Audio API not supported or failed to init on this device: ', e);
+      this.ctx = null;
     }
   }
 
