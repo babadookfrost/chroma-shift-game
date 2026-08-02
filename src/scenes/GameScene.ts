@@ -63,8 +63,19 @@ export class GameScene extends Phaser.Scene {
     // Set up active post-processing effects pipeline
     if (this.game.renderer.type === Phaser.WEBGL) {
       const renderer = this.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-      if (renderer && renderer.pipelines && typeof renderer.pipelines.has === 'function' && renderer.pipelines.has(ChromaPipeline.KEY)) {
-        this.cameras.main.setPostPipeline(ChromaPipeline.KEY);
+      if (renderer && renderer.pipelines) {
+        // Dynamically add the pipeline if it wasn't added in the global config
+        if (typeof renderer.pipelines.has === 'function' && !renderer.pipelines.has(ChromaPipeline.KEY)) {
+            try {
+                renderer.pipelines.addPostPipeline(ChromaPipeline.KEY, ChromaPipeline);
+            } catch (e) {
+                console.warn('[GameScene] Failed to add ChromaPipeline dynamically:', e);
+            }
+        }
+
+        if (typeof renderer.pipelines.has === 'function' && renderer.pipelines.has(ChromaPipeline.KEY)) {
+            this.cameras.main.setPostPipeline(ChromaPipeline.KEY);
+        }
       }
     } else {
       console.log('[GameScene] Post-processing pipeline skipped (Renderer is Canvas)');
