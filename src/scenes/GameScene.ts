@@ -454,7 +454,11 @@ export class GameScene extends Phaser.Scene {
     const pGfx = this.make.graphics();
     pGfx.fillStyle(0xffffff, 1);
     pGfx.fillCircle(4, 4, 3);
-    pGfx.generateTexture('glow_particle', 8, 8);
+    try {
+      pGfx.generateTexture('glow_particle', 8, 8);
+    } catch (e) {
+      console.warn('[GameScene] Failed to generate glow_particle', e);
+    }
 
     this.particleEmitter = this.add.particles(0, 0, 'glow_particle', {
       speed: { min: 40, max: 180 },

@@ -337,10 +337,15 @@ export class InputController {
    * Emulates haptic vibration via screen shakes & brief high-contrast chromatic flashes (iOS fallback).
    */
   private triggeriOSHaptic(): void {
-    if (navigator.vibrate) {
-      navigator.vibrate(15);
-    } else {
-      // iOS Safari Fallback: screen-shake
+    try {
+      if (typeof navigator.vibrate === 'function') {
+        navigator.vibrate(15);
+      } else {
+        // iOS Safari Fallback: screen-shake
+        this.camera.shake(80, 0.003);
+      }
+    } catch (e) {
+      // Ignore vibration errors on restrictive browsers
       this.camera.shake(80, 0.003);
     }
   }
